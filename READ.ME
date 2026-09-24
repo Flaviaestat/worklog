@@ -4,10 +4,33 @@ Aplicação simples em HTML/CSS/JS para registrar atividades diárias por turno 
 
 ## Uso
 
-Abra `index.html` no navegador. Não há build nem dependências.
+Abra `index.html` no navegador. Não há build.
 
 - **Novo registro**: escolha a data, o turno e descreva as atividades feitas.
 - **Registros**: lista agrupada por dia e turno, com busca, edição e exclusão.
 - **Exportar período**: defina data inicial/final (opcional) e o formato desejado (CSV, JSON ou TXT) para baixar o arquivo.
 
-Os dados ficam salvos no `localStorage` do navegador (por máquina/navegador).
+## Armazenamento
+
+Os dados ficam em um banco Postgres no [Supabase](https://supabase.com) (tabela `entries`), acessado direto do navegador via `config.js` (URL do projeto + chave pública `anon`). Isso permite acessar os mesmos registros de qualquer dispositivo.
+
+A chave `anon` é pública por design (protegida por Row Level Security no Supabase), então é seguro mantê-la em `config.js` neste repositório.
+
+### Esquema da tabela
+
+```sql
+create table entries (
+  id uuid primary key default gen_random_uuid(),
+  date date not null,
+  shift text not null check (shift in ('manha', 'tarde', 'noite')),
+  text text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table entries enable row level security;
+
+create policy "allow all for anon" on entries
+  for all
+  using (true)
+  with check (true);
+```

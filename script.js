@@ -1,5 +1,3 @@
-const STORAGE_KEY = "worklog.entries";
-
 const SHIFT_LABELS = {
   manha: "Manhã",
   tarde: "Tarde",
@@ -8,19 +6,7 @@ const SHIFT_LABELS = {
 
 const SHIFT_ORDER = ["manha", "tarde", "noite"];
 
-function loadEntries() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-function saveEntries(entries) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-}
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -31,7 +17,7 @@ function formatDateBR(isoDate) {
   return `${d}/${m}/${y}`;
 }
 
-let entries = loadEntries();
+let entries = [];
 
 const form = document.getElementById("entry-form");
 const dateInput = document.getElementById("entry-date");
@@ -46,20 +32,40 @@ const exportBtn = document.getElementById("export-btn");
 
 dateInput.value = todayISO();
 
-form.addEventListener("submit", (e) => {
+async function fetchEntries() {
+  const { data, error } = await supabaseClient
+    .from("entries")
+    .select("*")
+    .order("date", { ascending: false })
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error(error);
+    listEl.innerHTML = '<p class="empty-state">Erro ao carregar registros.</p>';
+    return;
+  }
+  entries = data;
+  render();
+}
+
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const entry = {
-    id: crypto.randomUUID(),
+  const text = textInput.value.trim();
+  if (!text) return;
+
+  const { error } = await supabaseClient.from("entries").insert({
     date: dateInput.value,
     shift: shiftInput.value,
-    text: textInput.value.trim(),
-    createdAt: new Date().toISOString(),
-  };
-  if (!entry.text) return;
-  entries.push(entry);
-  saveEntries(entries);
+    text,
+  });
+
+  if (error) {
+    console.error(error);
+    alert("Erro ao salvar registro.");
+    return;
+  }
+
   textInput.value = "";
-  render();
+  await fetchEntries();
 });
 
 searchInput.addEventListener("input", render);
@@ -130,21 +136,34 @@ function downloadFile(filename, content, mime) {
   URL.revokeObjectURL(url);
 }
 
-function deleteEntry(id) {
+async function deleteEntry(id) {
   if (!confirm("Excluir este registro?")) return;
-  entries = entries.filter((e) => e.id !== id);
-  saveEntries(entries);
-  render();
+  const { error } = await supabaseClient.from("entries").delete().eq("id", id);
+  if (error) {
+    console.error(error);
+    alert("Erro ao excluir registro.");
+    return;
+  }
+  await fetchEntries();
 }
 
-function editEntry(id) {
+async function editEntry(id) {
   const entry = entries.find((e) => e.id === id);
   if (!entry) return;
   const updated = prompt("Editar atividades:", entry.text);
   if (updated === null) return;
-  entry.text = updated.trim();
-  saveEntries(entries);
-  render();
+
+  const { error } = await supabaseClient
+    .from("entries")
+    .update({ text: updated.trim() })
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    alert("Erro ao editar registro.");
+    return;
+  }
+  await fetchEntries();
 }
 
 function render() {
@@ -214,4 +233,4 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-render();
+fetchEntries();
