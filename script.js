@@ -195,7 +195,7 @@ function render() {
           const items = byDate[date][shift]
             .map(
               (e) => `
-              <div class="entry-item" data-id="${e.id}">
+              <div class="entry-item ${shift}" data-id="${e.id}">
                 <div class="entry-text">${escapeHtml(e.text)}</div>
                 <div class="entry-actions">
                   <button class="edit-btn" data-id="${e.id}">Editar</button>
@@ -206,7 +206,7 @@ function render() {
             .join("");
           return `
             <div class="shift-block">
-              <div class="shift-label">${SHIFT_LABELS[shift]}</div>
+              <div class="shift-label ${shift}">${SHIFT_LABELS[shift]}</div>
               ${items}
             </div>`;
         })
