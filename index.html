@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Worklog</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Worklog</h1>
+      <p class="subtitle">Registro diário de atividades por turno</p>
+    </header>
+
+    <section class="card" id="entry-form-card">
+      <h2>Novo registro</h2>
+      <form id="entry-form">
+        <div class="form-row">
+          <div class="field">
+            <label for="entry-date">Data</label>
+            <input type="date" id="entry-date" required>
+          </div>
+          <div class="field">
+            <label for="entry-shift">Turno</label>
+            <select id="entry-shift" required>
+              <option value="manha">Manhã</option>
+              <option value="tarde">Tarde</option>
+              <option value="noite">Noite</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="entry-text">Atividades</label>
+          <textarea id="entry-text" rows="4" placeholder="Descreva o que foi feito neste turno..." required></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Salvar registro</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" id="export-card">
+      <h2>Exportar período</h2>
+      <div class="form-row">
+        <div class="field">
+          <label for="export-start">De</label>
+          <input type="date" id="export-start">
+        </div>
+        <div class="field">
+          <label for="export-end">Até</label>
+          <input type="date" id="export-end">
+        </div>
+        <div class="field">
+          <label for="export-format">Formato</label>
+          <select id="export-format">
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+            <option value="txt">Texto (.txt)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button id="export-btn" class="btn btn-secondary" type="button">Exportar</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="entries-header">
+        <h2>Registros</h2>
+        <input type="search" id="search-input" placeholder="Buscar nos registros...">
+      </div>
+      <div id="entries-list"></div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
